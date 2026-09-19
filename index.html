@@ -1,371 +1,70 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
-  <base target="_top">
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <meta name="theme-color" content="#1a73e8">
-
-  <title>忘年会受付</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-
-      margin: 0;
-
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-      background: #f5f7fa;
-
-      color: #222;
-
-    }
-
-    .app {
-
-      min-height: 100vh;
-
-      display: flex;
-
-      flex-direction: column;
-
-    }
-
-    .header {
-
-      background: #1a73e8;
-
-      color: white;
-
-      padding: 18px;
-
-      text-align: center;
-
-    }
-
-    .header h1 {
-
-      margin: 0;
-
-      font-size: 22px;
-
-    }
-
-    .main {
-
-      flex: 1;
-
-      padding: 20px;
-
-      display: flex;
-
-      justify-content: center;
-
-    }
-
-    .card {
-
-      width: 100%;
-
-      max-width: 500px;
-
-      background: white;
-
-      border-radius: 16px;
-
-      padding: 24px;
-
-      box-shadow:
-        0 2px 10px rgba(0, 0, 0, 0.08);
-
-    }
-
-    .title {
-
-      text-align: center;
-
-      font-size: 20px;
-
-      font-weight: bold;
-
-      margin-bottom: 25px;
-
-    }
-
-    .input {
-
-      width: 100%;
-
-      padding: 14px;
-
-      margin-bottom: 15px;
-
-      border:
-        1px solid #ddd;
-
-      border-radius: 10px;
-
-      font-size: 16px;
-
-    }
-
-    .button {
-
-      width: 100%;
-
-      padding: 15px;
-
-      border: none;
-
-      border-radius: 10px;
-
-      background: #1a73e8;
-
-      color: white;
-
-      font-size: 17px;
-
-      font-weight: bold;
-
-      cursor: pointer;
-
-    }
-
-    .button:active {
-
-      transform: scale(0.98);
-
-    }
-
-    .message {
-
-      margin-top: 20px;
-
-      text-align: center;
-
-      color: #666;
-
-    }
-
-    .hidden {
-
-      display: none;
-
-    }
-  </style>
-
+  <title>カメラテスト</title>
+
+  <script
+    src="https://unpkg.com/html5-qrcode"
+    type="text/javascript">
+  </script>
 </head>
-
 
 <body>
 
-  <div class="app">
+  <h2>📷 カメラテスト</h2>
 
-    <div class="header">
+  <div id="reader" style="width:100%;"></div>
 
-      <h1>🎉 忘年会受付</h1>
-
-    </div>
-
-
-    <div class="main">
-
-      <div class="card">
-
-
-        <!-- ログイン画面 -->
-
-        <div id="loginScreen">
-
-          <div class="title">
-
-            受付担当者ログイン
-
-          </div>
-
-
-          <input id="staffId" class="input" type="text" placeholder="担当者ID" autocomplete="username">
-
-
-          <input id="pin" class="input" type="password" placeholder="PIN" autocomplete="current-password">
-
-
-          <button class="button" onclick="login()">
-
-            受付を開始
-
-          </button>
-
-
-          <div id="loginMessage" class="message"></div>
-
-        </div>
-
-
-        <!-- QR読み取り画面 -->
-
-        <div id="scannerScreen" class="hidden">
-
-          <div class="title">
-
-            📷 QRコードを読み取ってください
-
-          </div>
-
-          <div id="reader" style="width:100%; border-radius:12px; overflow:hidden;"></div>
-
-          <div id="scanMessage" class="message">
-
-            カメラを起動しています...
-
-          </div>
-
-        </div>
-
-
-      </div>
-
-    </div>
-
-  </div>
-
+  <p id="message">カメラを起動しています...</p>
 
   <script>
-    function login() {
 
-      const staffId = document.getElementById("staffId").value.trim();
-      const pin = document.getElementById("pin").value.trim();
-      const message = document.getElementById("loginMessage");
+    const message =
+      document.getElementById("message");
 
-      if (!staffId || !pin) {
-        message.textContent = "担当者IDとPINを入力してください。";
-        return;
-      }
+    const scanner =
+      new Html5Qrcode("reader");
 
-      message.textContent = "認証しています...";
-
-      google.script.run.withSuccessHandler(function (result) {
-
-        if (!result.success) {
-          message.textContent = result.message;
-          return;
-        }
-
-        message.textContent = "";
-
-        // ログイン画面を隠す
-        document.getElementById("loginScreen").classList.add("hidden");
-
-
-        // QR画面を表示
-        document.getElementById("scannerScreen").classList.remove("hidden");
-        startScanner();
-
-        // 担当者名を表示
-        document.getElementById("scanMessage").textContent = result.staffName + " さん、QRコードをかざしてください。";
-
-      }).withFailureHandler(function (error) {
-        message.textContent = "システムエラー：" + error.message;
-      }).loginStaff(staffId, pin);
-    }
-
-    let qrScanner = null;
-
-    function startScanner() {
-
-      const message = document.getElementById("scanMessage");
-
-      message.textContent = "カメラを起動しています...";
-
-
-      qrScanner = new Html5Qrcode("reader");
-
-
-      const config = {
+    scanner.start(
+      {
+        facingMode: "environment"
+      },
+      {
         fps: 10,
         qrbox: {
           width: 250,
           height: 250
         }
-      };
+      },
+      function(decodedText) {
 
+        message.textContent =
+          "QR読み取り成功：" + decodedText;
 
-      qrScanner.start(
+      },
+      function(errorMessage) {
 
-        {
-          facingMode: "environment"
-        },
-
-        config,
-
-        onScanSuccess,
-
-        onScanFailure
-
-      )
-
-        .then(function () {
-          message.textContent = "QRコードをかざしてください。";
-        })
-
-        .catch(function (error) {
-
-          message.textContent = "カメラを起動できませんでした。";
-
-          console.error(error);
-
-        });
-
-    }
-
-    function onScanSuccess(decodedText, decodedResult) {
-      console.log(
-        "QR読み取り成功:",
-        decodedText
-      );
-
-
-      // 二重読み取り防止
-
-      if (qrScanner) {
-
-        qrScanner.pause(
-          true
-        );
+        // QRが見つからない間は何もしない
 
       }
+    )
+    .then(function() {
 
+      message.textContent =
+        "カメラ起動成功！QRコードをかざしてください。";
 
-      document.getElementById(
-        "scanMessage"
-      ).textContent =
-        "QRを確認しています...";
+    })
+    .catch(function(error) {
 
+      message.textContent =
+        "カメラ起動失敗：" + error;
 
-      // ここでGASへ受付IDを送る
-      // 次のSTEPで実装します
+      console.error(error);
 
-    }
+    });
 
-    function onScanFailure(error) {
-
-      // QRが見つからない場合は何もしない
-
-    }
   </script>
 
 </body>
-
 </html>
